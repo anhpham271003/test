@@ -1,0 +1,124 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+    .product-item {
+        display: flex;
+        gap: 20px;
+
+        .product-images {
+            flex: 1;
+            max-width: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+            object-fit: cover;
+        }
+
+        .product-info {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+
+            .product-name {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .price-quantity-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                gap: 20px;
+            }
+
+            .price {
+                font-size: 20px;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                gap: 30px;
+
+                .old-price {
+                    text-decoration: line-through;
+                    color: #888;
+                }
+
+                .discount-price {
+                    color: red;
+                    font-size: 28px;
+                }
+
+                .normal-price {
+                    color: #333;
+                    font-size: 22px;
+                }
+            }
+
+            .product-quantity {
+                display: flex;
+                gap: 20px;
+            }
+
+            .product-actions {
+                display: flex;
+                gap: 10px;
+
+                button {
+                    padding: 10px 15px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    transition: 0.3s;
+                }
+
+                button:first-child {
+                    background-color: #ff6600;
+                    color: white;
+                }
+
+                button:nth-child(2) {
+                    background-color: gray;
+                    color: white;
+                }
+
+                button:nth-child(3) {
+                    background-color: #007bff;
+                    color: white;
+                }
+
+                button:last-child {
+                    background-color: red;
+                    color: white;
+                }
+
+                button:hover {
+                    opacity: 0.8;
+                }
+            }
+        }
+    }
+
+    .product-details {
+        padding: 20px;
+        border-top: 1px solid #ddd;
+        font-size: 16px;
+
+        .description-product {
+            margin-bottom: 10px;
+            span {
+                font-weight: bold;
+                color: #333;
+            }
+        }
+    }
+}

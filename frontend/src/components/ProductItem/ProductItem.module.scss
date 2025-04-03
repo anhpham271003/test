@@ -1,0 +1,137 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    transition: 0.3s ease-in-out;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+
+    &:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Label sản phẩm nổi bật
+.featured-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: red;
+    color: white;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.avatar {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #f5f5f5;
+}
+
+.info {
+    padding: 10px;
+
+    .name {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .price {
+        font-size: 16px;
+        font-weight: bold;
+        color: #ff5722;
+
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 5px;
+        }
+    }
+
+    .manufacturer,
+    .origin,
+    .category {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .quantity {
+        font-size: 14px;
+        font-weight: bold;
+        color: #4caf50;
+    }
+
+    .description {
+        font-size: 14px;
+        color: #333;
+        margin-top: 10px;
+    }
+
+    .rating {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+
+        .sold {
+            font-size: 14px;
+            color: #ff9800;
+        }
+
+        .liked {
+            font-size: 14px;
+            color: #e91e63;
+        }
+    }
+}
+
+// Kiểu Compact
+.compact {
+    .avatar {
+        height: 150px;
+    }
+
+    .info {
+        .price {
+            font-size: 14px;
+        }
+    }
+}
+
+// Kiểu Half-Full
+.half-full {
+    .avatar {
+        height: 180px;
+    }
+
+    .info {
+        .content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
+}
+
+// Kiểu Full
+.full {
+    .avatar {
+        height: 220px;
+    }
+
+    .info {
+        .manufacturer,
+        .origin,
+        .category {
+            margin-top: 5px;
+        }
+    }
+}
