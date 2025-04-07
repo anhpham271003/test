@@ -1,47 +1,42 @@
-import { useEffect, useState } from 'react';
-import * as productService from '~/services/productService';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import * as searchServices from '~/services/searchService';
+
 import classNames from 'classnames/bind';
-import styles from './Home.module.scss';
-import { Link } from 'react-router-dom';
+import styles from './Search.module.scss';
 import config from '~/config';
 import Image from '~/components/Image';
 
 const cx = classNames.bind(styles);
 
-function Home() {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(0);
-    const [total, setTotal] = useState(0);
+function Search() {
+    const [searchResult, setSearchResult] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    const location = useLocation();
+    const query = new URLSearchParams(location.search).get('q');
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            setLoading(true);
-            try {
-                const response = await productService.getProducts({ params: { page, limit } });
-                console.log('data: ', response.products);
-                setProducts(response.products);
-                setTotal(response.total);
-                setLimit(response.limit);
-            } catch (error) {
-                console.error('Lỗi khi lấy danh sách sản phẩm:', error);
-            } finally {
+        if (query) {
+            const fetchSearchResults = async () => {
+                setLoading(true);
+                const result = await searchServices.search(query);
+                setSearchResult(result.products);
                 setLoading(false);
-            }
-        };
-        fetchProducts();
-    }, [page, limit]);
+            };
+            fetchSearchResults();
+        }
+    }, [query]);
 
     return (
         <div className={cx('wrapper')}>
-            <h2>Danh sách sản phẩm</h2>
+            <h3 className={cx('title')}>Kết quả tìm kiếm: {query}</h3>
             {loading ? (
-                <p>Đang tải...</p>
+                <p>Loading...!</p>
             ) : (
                 <>
                     <div className={cx('product-list')} tabIndex={-1}>
-                        {products.map((product) => {
+                        {searchResult.map((product) => {
                             const hasDiscount = product.productSupPrice > 0;
                             const productFinallyPrice = product.productUnitPrice * (1 - product.productSupPrice / 100);
                             return (
@@ -78,23 +73,27 @@ function Home() {
                             );
                         })}
                     </div>
-
-                    {/* Phân trang */}
-                    <div className={cx('pagination')}>
-                        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-                            Trước
-                        </button>
-                        <span>
-                            Trang {page} / {Math.ceil(total / limit)}
-                        </span>
-                        <button disabled={page * limit >= total} onClick={() => setPage(page + 1)}>
-                            Tiếp
-                        </button>
-                    </div>
                 </>
             )}
         </div>
     );
 }
 
-export default Home;
+export default Search;
+{
+    /* <div>
+            <h2>Search Results for: {query}</h2>
+            {loading ? (
+                <p>Loading...</p>
+            ) : (
+                <div>
+                    {searchResult.map((product) => (
+                        <div key={product._id}>
+                            <h3>{product.productName}</h3>
+                            <p>{product.productUnitPrice} VNĐ</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div> */
+}

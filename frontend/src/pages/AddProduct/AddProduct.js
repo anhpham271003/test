@@ -4,17 +4,30 @@ import * as manufacturerService from '~/services/manufacturerService';
 import * as originService from '~/services/originService';
 import * as categoryService from '~/services/categoryService';
 import * as unitService from '~/services/unitService';
-import * as productServices from '~/services/productService';
 
-import { Navigate, useParams } from 'react-router-dom';
-import styles from './UpdateProduct.module.scss';
+import { useNavigate } from 'react-router-dom';
+import styles from './AddProduct.module.scss';
 import classNames from 'classnames/bind';
 
 const cx = classNames.bind(styles);
-function UpdateProduct() {
-    const { productId } = useParams();
-    const [product, setProduct] = useState([]);
-    const [loading, setLoading] = useState(true);
+function AddProduct() {
+    const navigate = useNavigate();
+    const [product, setProduct] = useState({
+        productName: '',
+        productUnitPrice: 0,
+        productSupPrice: 0,
+        productQuantity: 0,
+        productWarranty: 0,
+        productStatus: 'available',
+        productCategory: '',
+        productUnit: '',
+        productManufacturer: '',
+        productOrigin: '',
+        productImgs: [],
+        productDescription: '',
+    });
+
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [categories, setCategories] = useState([]);
     const [units, setUnits] = useState([]);
@@ -22,17 +35,6 @@ function UpdateProduct() {
     const [origins, setOrigins] = useState([]);
 
     useEffect(() => {
-        const fetchProductDetails = async () => {
-            setLoading(true);
-            try {
-                const result = await productServices.getProductById(productId);
-                setProduct(result);
-            } catch (error) {
-                console.error('Error fetching product details:', error);
-            }
-            setLoading(false);
-        };
-        fetchProductDetails();
         const fetchCategories = async () => {
             try {
                 const categoryData = await categoryService.getCategories();
@@ -73,7 +75,7 @@ function UpdateProduct() {
         fetchManufacturer();
         fetchOrigin();
         fetchUnit();
-    }, [productId]);
+    }, []);
 
     const formatCurrency = (value) => {
         if (!value) return '';
@@ -83,15 +85,15 @@ function UpdateProduct() {
     const parseCurrency = (value) => {
         return value.replace(/\./g, '');
     };
+
     const handleChange = (e) => {
         const { name, value, files } = e.target;
+
         if (name === 'productImgs') {
-            if (files.length > 0) {
-                setProduct((prevProduct) => ({
-                    ...prevProduct,
-                    productImgs: Array.from(files),
-                }));
-            }
+            setProduct((prevProduct) => ({
+                ...prevProduct,
+                productImgs: [...prevProduct.productImgs, ...Array.from(files)],
+            }));
         } else if (name === 'productUnitPrice' || name === 'productSupPrice') {
             const numericValue = parseCurrency(value);
             if (!/^\d*$/.test(numericValue)) return;
@@ -109,6 +111,7 @@ function UpdateProduct() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log(product);
         setLoading(true);
         setError('');
 
@@ -123,16 +126,14 @@ function UpdateProduct() {
             formData.append('productOrigin', product.productOrigin);
             formData.append('productDescription', product.productDescription);
 
-            if (product.productImgs && product.productImgs.length > 0) {
-                product.productImgs.forEach((img) => {
-                    formData.append('productImgs', img);
-                });
-            }
-            await productService.updateProduct(productId, formData, {
+            product.productImgs.forEach((img) => {
+                formData.append('productImgs', img);
+            });
+            await productService.addProduct(formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             alert('Thêm sản phẩm thành công!');
-            Navigate('/');
+            navigate('/');
         } catch (err) {
             setError('Có lỗi xảy ra khi thêm sản phẩm. Vui lòng thử lại.');
         } finally {
@@ -142,7 +143,7 @@ function UpdateProduct() {
 
     return (
         <div className={cx('wrapper')}>
-            <h2 className={cx('heading')}>Sửa Sản Phẩm </h2>
+            <h2 className={cx('heading')}>Thêm Sản Phẩm Mới</h2>
             {error && <p className={cx('error-message')}>{error}</p>}
             <form onSubmit={handleSubmit} className={cx('form')}>
                 <div className={cx('form-group')}>
@@ -289,11 +290,6 @@ function UpdateProduct() {
                 </div>
 
                 <div className={cx('form-group')}>
-                    <label className={cx('label')}>Ảnh sản phẩm:</label>
-                    <input type="file" name="productImgs" onChange={handleChange} className={cx('input')} multiple />
-                </div>
-
-                <div className={cx('form-group')}>
                     <label className={cx('label')}>Mô tả sản phẩm:</label>
                     <textarea
                         name="productDescription"
@@ -304,12 +300,27 @@ function UpdateProduct() {
                     />
                 </div>
 
+                <div className={cx('form-group')}>
+                    <label className={cx('label')}>Ảnh sản phẩm:</label>
+                    <input type="file" name="productImgs" multiple onChange={handleChange} className={cx('input')} />
+                    <div className={cx('preview')}>
+                        {product.productImgs.map((img, index) => (
+                            <img
+                                key={index}
+                                src={URL.createObjectURL(img)}
+                                alt="Preview"
+                                className={cx('preview-img')}
+                            />
+                        ))}
+                    </div>
+                </div>
+
                 <button type="submit" className={cx('submit-button')} disabled={loading}>
-                    {loading ? 'Đang sửa...' : 'Sửa sản phẩm'}
+                    {loading ? 'Đang thêm...' : 'Thêm sản phẩm'}
                 </button>
             </form>
         </div>
     );
 }
 
-export default UpdateProduct;
+export default AddProduct;

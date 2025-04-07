@@ -13,7 +13,7 @@ const RouterManufacturer = require("./routes/routerManufacturer");
 const RouterOrigin = require("./routes/routerOrigin");
 const RouterUnit = require("./routes/routerUnit");
 
-dotenv.config(); // Load biến môi trường từ .env
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -25,7 +25,6 @@ app.use(cors());
 db.connect();
 
 // Use routes
-// app.use("/api/card", RouterCard);
 app.use("/api/products", RouterProduct);
 app.use("/api/users", RouterUser);
 app.use("/api/carts", RouterCart);

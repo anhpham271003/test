@@ -1,0 +1,2 @@
+_id,userName,userEmail,userNameAccount,userPassword,userPhone,userBirthday,userGender,userRole,userStatus,userPoint,userAvatar.link,userAvatar.alt,cart[0].product,cart[0].quantity,cart[0].unitPrice
+660000000000000000001000,Nguyen Van A,nguyenvana@example.com,nguyenvana,hashed_password,123456789,1995-05-10T00:00:00.000Z,male,customer,active,100,avatar.jpg,Nguyen Van A,660000000000000000000100,1,1400

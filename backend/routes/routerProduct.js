@@ -5,17 +5,12 @@ const Product = require("../models/Product");
 const { uploadProduct } = require("../middlewares/uploadImage/uploads");
 const BASE_URL = process.env.BASE_URL;
 
-// API lấy danh sách sản phẩm (có hỗ trợ tìm kiếm và phân trang)
+//API lấy danh sách sản phẩm
 router.get("/", async (req, res) => {
   try {
-    // Lấy các query parameters: page, limit, search từ client
-    const { page = 1, limit = 8, search = "" } = req.query;
+    const { page = 1, limit = 9, search = "" } = req.query;
 
-    // Tạo query tìm kiếm theo tên sản phẩm nếu có
-    const query = search ? { productName: new RegExp(search, "i") } : {};
-
-    // Lấy danh sách sản phẩm kèm phân trang
-    const products = await Product.find(query)
+    const products = await Product.find()
       .populate("productCategory", "nameCategory")
       .populate("productUnit", "nameUnit")
       .populate("productManufacturer", "nameManufacturer")
@@ -23,34 +18,27 @@ router.get("/", async (req, res) => {
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
       .lean();
-
-    // Đếm tổng số sản phẩm
-    const total = await Product.countDocuments(query);
-
-    // Trả về danh sách sản phẩm cùng tổng số và thông tin phân trang
+    const total = await Product.countDocuments();
     res.json({ products, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
+// API tìm kiếm
 router.get("/search", async (req, res) => {
   try {
     const { q } = req.query;
 
-    // Xây dựng query tìm kiếm theo tên sản phẩm
-    const query = q ? { productName: new RegExp(q, "i") } : {}; // Tìm kiếm không phân biệt hoa/thường
-    console.log(query);
-    // Lấy danh sách sản phẩm theo query và phân trang
+    const query = q ? { productName: new RegExp(q, "i") } : {};
     const products = await Product.find(query)
       .populate("productCategory", "nameCategory")
       .populate("productUnit", "nameUnit")
       .populate("productManufacturer", "nameManufacturer")
       .populate("productOrigin", "nameOrigin")
       .lean();
-    // Đếm tổng số sản phẩm thỏa mãn điều kiện tìm kiếm
     const total = await Product.countDocuments(query);
 
-    // Trả về kết quả dưới dạng JSON
     res.json({
       products,
       total,
@@ -59,6 +47,7 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 // API lấy chi tiết sản phẩm theo ID
 router.get("/:id", async (req, res) => {
   try {
@@ -95,7 +84,6 @@ router.post("/", uploadProduct.array("productImgs", 10), async (req, res) => {
       productAvgRating = 0,
     } = req.body;
 
-    // Kiểm tra nếu có file ảnh được tải lên
     let productImgs = [];
     if (req.files && req.files.length > 0) {
       productImgs = req.files.map((file) => ({
@@ -104,7 +92,6 @@ router.post("/", uploadProduct.array("productImgs", 10), async (req, res) => {
       }));
     }
 
-    // Tạo sản phẩm mới với các dữ liệu đã lấy
     const newProduct = new Product({
       productName,
       productUnitPrice,
@@ -170,12 +157,9 @@ router.put("/:id", uploadProduct.array("productImgs", 10), async (req, res) => {
 // API xóa sản phẩm
 router.delete("/:id", async (req, res) => {
   try {
-    // Xóa sản phẩm theo ID
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-
     if (!deletedProduct)
       return res.status(404).json({ message: "Product not found" });
-
     res.json({ message: "Xóa sản phẩm thành công", deletedProduct });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -8,6 +8,8 @@ import { Wrapper as PopperWrapper } from '~/components/Popper';
 import { SearchIcon } from '~/components/Icons';
 import { useDebounce } from '~/hooks';
 import styles from './Search.module.scss';
+import { Link, useNavigate } from 'react-router-dom';
+import config from '~/config';
 
 const cx = classNames.bind(styles);
 
@@ -18,7 +20,7 @@ function Search() {
     const [loading, setLoading] = useState(false);
 
     const debouncedValue = useDebounce(searchValue, 500);
-
+    const navigate = useNavigate();
     const inputRef = useRef();
 
     useEffect(() => {
@@ -29,24 +31,32 @@ function Search() {
         const fetchAPI = async () => {
             setLoading(true);
             const result = await searchServices.search(debouncedValue);
-            console.log('Search Result:', result); // Kiểm tra API trả về
             setSearchResult(result.products);
             setLoading(false);
         };
         fetchAPI();
     }, [debouncedValue]);
+
     const handleClear = () => {
         setSearchValue('');
         setSearchResult([]);
         inputRef.current.focus();
     };
+
     const handleHideResult = () => {
         setShowResult(false);
     };
+
     const handleChange = (e) => {
         const searchValue = e.target.value;
         if (!searchValue.startsWith(' ')) {
             setSearchValue(searchValue);
+        }
+    };
+
+    const handleSearch = () => {
+        if (searchValue.trim()) {
+            navigate(`${config.routes.search}?q=${searchValue}`);
         }
     };
 
@@ -59,40 +69,39 @@ function Search() {
                     <div className={cx('search-result')} tabIndex="-1" {...attrs}>
                         <PopperWrapper>
                             <h4 className={cx('search-title')}>Product</h4>
-                            {/* Hiển thị chỉ 5 sản phẩm đầu tiên */}
                             {searchResult.slice(0, 7).map((result) => {
-                                const hasDiscount = result.productSupPrice > 0; // Kiểm tra có giảm giá không
+                                const hasDiscount = result.productSupPrice > 0;
                                 const productFinallyPrice =
                                     result.productUnitPrice * (1 - result.productSupPrice / 100);
                                 return (
-                                    <div key={result._id} className={cx('product-item')}>
-                                        <img
-                                            className={cx('product-avatar')}
-                                            src={result.productImgs[0].link}
-                                            alt={result.productName}
-                                        />
-                                        <div className={cx('product-info')}>
-                                            <h3>{result.productName}</h3>
-
-                                            {/* Hiển thị giá */}
-                                            <p>
-                                                {hasDiscount ? (
-                                                    <>
-                                                        <span className={cx('old-price')}>
+                                    <Link to={`${config.routes.productDetail.replace(':productId', result._id)}`}>
+                                        <div key={result._id} className={cx('product-item')}>
+                                            <img
+                                                className={cx('product-avatar')}
+                                                src={result.productImgs[0].link}
+                                                alt={result.productName}
+                                            />
+                                            <div className={cx('product-info')}>
+                                                <h3>{result.productName}</h3>
+                                                <p>
+                                                    {hasDiscount ? (
+                                                        <>
+                                                            <span className={cx('old-price')}>
+                                                                {result.productUnitPrice.toLocaleString()} VNĐ
+                                                            </span>{' '}
+                                                            <span className={cx('discount-price')}>
+                                                                {productFinallyPrice.toLocaleString()} VNĐ
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className={cx('normal-price')}>
                                                             {result.productUnitPrice.toLocaleString()} VNĐ
-                                                        </span>{' '}
-                                                        <span className={cx('discount-price')}>
-                                                            {productFinallyPrice.toLocaleString()} VNĐ
                                                         </span>
-                                                    </>
-                                                ) : (
-                                                    <span className={cx('normal-price')}>
-                                                        {result.productUnitPrice.toLocaleString()} VNĐ
-                                                    </span>
-                                                )}
-                                            </p>
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </Link>
                                 );
                             })}
                         </PopperWrapper>
@@ -115,7 +124,9 @@ function Search() {
                         </button>
                     )}
                     {loading && <FontAwesomeIcon className={cx('loading')} icon={faSpinner} />}
-                    <button className={cx('search-btn')} onMouseDown={(e) => e.preventDefault()}>
+                    <button className={cx('search-btn')} onClick={handleSearch}>
+                        {' '}
+                        {/* Khi bấm tìm kiếm */}
                         <SearchIcon />
                     </button>
                 </div>

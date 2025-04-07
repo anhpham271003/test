@@ -120,7 +120,7 @@ function ProductDetail() {
                 </div>
             </div>
             <div className={cx('product-details')}>
-                <p>Chi tiết sản phẩm</p>
+                <h3>Chi tiết sản phẩm</h3>
                 <p className={cx('description-product')}>
                     <span>Danh mục:</span> {productCategory.nameCategory}
                 </p>
@@ -131,22 +131,13 @@ function ProductDetail() {
                     <span>Xuất xứ:</span> {productOrigin.nameOrigin}
                 </p>
                 <p className={cx('description-product')}>
-                    <span>Số lượng còn lại:</span> {productQuantity}
-                </p>
-                <p className={cx('description-product')}>
-                    <span>Số lượng đã bán:</span> {productSoldQuantity}
-                </p>
-                <p className={cx('description-product')}>
-                    <span>Đánh giá trung bình:</span> {productAvgRating}
-                </p>
-                <p className={cx('description-product')}>
                     <span>Đơn vị:</span> {productUnit.nameUnit}
                 </p>
                 <p className={cx('description-product')}>
                     <span>Bảo hành:</span> {productWarranty} tháng
                 </p>
                 <p className={cx('description-product')}>
-                    <span>Trạng thái:</span> {productStatus}
+                    <span>Trạng thái:</span> {productStatus == 'available' ? 'Còn hàng' : 'Hết hàng'}
                 </p>
                 <p className={cx('description-product')}>
                     <span>Mô tả:</span> {productDescription}
