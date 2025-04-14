@@ -145,6 +145,7 @@ function AddProduct() {
         <div className={cx('wrapper')}>
             <h2 className={cx('heading')}>Thêm Sản Phẩm Mới</h2>
             {error && <p className={cx('error-message')}>{error}</p>}
+
             <form onSubmit={handleSubmit} className={cx('form')}>
                 <div className={cx('form-group')}>
                     <label className={cx('label')}>Tên sản phẩm:</label>

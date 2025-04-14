@@ -1,6 +1,9 @@
+import logo from '~/assets/images/logo.png';
+import noImage from '~/assets/images/no-image.png';
+
 const images = {
-    logo: require('~/assets/images/logo.svg').default,
-    noImage: require('~/assets/images/no-image.png'),
+    logo,
+    noImage,
 };
 
 export default images;

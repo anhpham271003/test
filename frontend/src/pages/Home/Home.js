@@ -11,21 +11,21 @@ const cx = classNames.bind(styles);
 function Home() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(0);
     const [total, setTotal] = useState(0);
-
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
             try {
-                const response = await productService.getProducts({ params: { page, limit } });
-                console.log('data: ', response.products);
+                const response = await productService.getProducts({ page: 1, limit: 12 });
+
                 setProducts(response.products);
                 setTotal(response.total);
                 setLimit(response.limit);
             } catch (error) {
-                console.error('Lỗi khi lấy danh sách sản phẩm:', error);
+                setError('Lỗi khi lấy danh sách sản phẩm');
             } finally {
                 setLoading(false);
             }
@@ -36,6 +36,7 @@ function Home() {
     return (
         <div className={cx('wrapper')}>
             <h2>Danh sách sản phẩm</h2>
+            {error && <p>{error}</p>}
             {loading ? (
                 <p>Đang tải...</p>
             ) : (

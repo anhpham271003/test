@@ -12,6 +12,7 @@ const routes = {
     login: '/login',
     order: '/order',
     address: '/address',
+    category: '/category/:categoryId',
 };
 
 export default routes;

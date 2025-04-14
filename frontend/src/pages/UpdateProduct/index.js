@@ -6,7 +6,7 @@ import * as categoryService from '~/services/categoryService';
 import * as unitService from '~/services/unitService';
 import * as productServices from '~/services/productService';
 
-import { Navigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import styles from './UpdateProduct.module.scss';
 import classNames from 'classnames/bind';
 
@@ -20,7 +20,7 @@ function UpdateProduct() {
     const [units, setUnits] = useState([]);
     const [manufacturers, setManufacturers] = useState([]);
     const [origins, setOrigins] = useState([]);
-
+    const navigate = useNavigate();
     useEffect(() => {
         const fetchProductDetails = async () => {
             setLoading(true);
@@ -131,10 +131,11 @@ function UpdateProduct() {
             await productService.updateProduct(productId, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            alert('Thêm sản phẩm thành công!');
-            Navigate('/');
-        } catch (err) {
-            setError('Có lỗi xảy ra khi thêm sản phẩm. Vui lòng thử lại.');
+            alert('Sửa sản phẩm thành công!');
+            navigate('/');
+        } catch (error) {
+            setError('Có lỗi xảy ra khi sửa sản phẩm. Vui lòng thử lại.1');
+            console.log(error);
         } finally {
             setLoading(false);
         }

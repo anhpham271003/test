@@ -16,8 +16,8 @@ function ProductDetail() {
         const fetchProductDetails = async () => {
             setLoading(true);
             try {
-                const result = await productServices.getProductById(productId);
-                setProduct(result);
+                const response = await productServices.getProductById(productId);
+                setProduct(response);
             } catch (error) {
                 console.error('Error fetching product details:', error);
             }

@@ -12,6 +12,7 @@ import Search from '~/pages/Search';
 import ProductDetail from '~/pages/ProductDetail';
 import AddProduct from '~/pages/AddProduct';
 import UpdateProduct from '~/pages/UpdateProduct';
+import Category from '~/pages/Category';
 // Public routes
 const publicRoutes = [
     { path: config.routes.home, component: Home },
@@ -22,6 +23,7 @@ const publicRoutes = [
     { path: config.routes.productDetail, component: ProductDetail },
     { path: config.routes.addProduct, component: AddProduct },
     { path: config.routes.updateProduct, component: UpdateProduct },
+    { path: config.routes.category, component: Category },
 ];
 
 const privateRoutes = [];

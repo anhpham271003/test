@@ -7,9 +7,10 @@ const BASE_URL = process.env.BASE_URL;
 
 //API lấy danh sách sản phẩm
 router.get("/", async (req, res) => {
+  console.log("req.query", req.query);
+  console.log("req.params", req.params);
   try {
-    const { page = 1, limit = 9, search = "" } = req.query;
-
+    const { page, limit } = req.query;
     const products = await Product.find()
       .populate("productCategory", "nameCategory")
       .populate("productUnit", "nameUnit")
@@ -131,7 +132,7 @@ router.put("/:id", uploadProduct.array("productImgs", 10), async (req, res) => {
     let newImgs = [];
     if (req.files && req.files.length > 0) {
       newImgs = req.files.map((file) => ({
-        link: `${BASE_URL}/public/products/${file.filename}`,
+        link: `${BASE_URL}public/products/${file.filename}`,
         alt: req.body.productName,
       }));
     }
