@@ -12,6 +12,7 @@ const RouterCategory = require("./routes/routerCategory");
 const RouterManufacturer = require("./routes/routerManufacturer");
 const RouterOrigin = require("./routes/routerOrigin");
 const RouterUnit = require("./routes/routerUnit");
+const routerAuth = require("./routes/routerAuth");
 
 dotenv.config();
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/categories", RouterCategory);
 app.use("/api/manufacturers", RouterManufacturer);
 app.use("/api/origins", RouterOrigin);
 app.use("/api/units", RouterUnit);
+app.use("/api/auth", routerAuth);
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 

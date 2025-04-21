@@ -1,21 +1,29 @@
 const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
-  const AuthToken = req.header("Authorization");
-  const Token = AuthToken && AuthToken.split(" ")[1];
-  if (Token) {
-    try {
-      const decode = jwt.verify(Token, process.env.secret_token);
-      req.userId = decode.userId;
-      req.cardId = decode.idCard;
-      req.role = decode.role;
-      req.roleAd = decode.role[0];
-      next();
-    } catch (error) {
-      res.status(403).json({ success: false, message: "Token Invalid" });
+  try {
+    const authHeader = req.header("Authorization");
+    const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Token không được cung cấp." });
     }
-  } else {
-    res.status(401).json({ success: false, message: "Token not found" });
+
+    const decoded = jwt.verify(token, process.env.secret_token);
+    req.user = {
+      id: decoded.userId,
+      role: decoded.role,
+      idCard: decoded.idCard || null, // phòng trường hợp không có
+    };
+
+    next();
+  } catch (error) {
+    console.error("verifyToken Error:", error);
+    return res
+      .status(403)
+      .json({ success: false, message: "Token không hợp lệ hoặc hết hạn." });
   }
 };
 

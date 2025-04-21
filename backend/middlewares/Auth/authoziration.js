@@ -10,7 +10,7 @@ const authPage = (premission) => {
       },
     };
     if (!user) {
-      return res.status(403).josn("Tài khoản không hợp lệ!!");
+      return res.status(403).json("Tài khoản không hợp lệ!!");
     }
     const { role } = user;
     if (!premission?.includes(role)) {

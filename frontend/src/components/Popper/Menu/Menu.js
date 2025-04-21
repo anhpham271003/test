@@ -25,7 +25,9 @@ function Menu({ children, items = [], hideOnClick = false, onChange = defaultFn 
                     key={index}
                     data={item}
                     onClick={() => {
-                        if (isParent) {
+                        if (item.onClick) {
+                            item.onClick();
+                        } else if (isParent) {
                             setHistory((prev) => [...prev, item.children]);
                         } else {
                             onChange(item);

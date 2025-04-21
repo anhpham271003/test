@@ -19,12 +19,16 @@ const UserSchema = new mongoose.Schema(
     cart: {
       type: [
         {
+          _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: () => new mongoose.Types.ObjectId(),
+          }, // ID riêng cho mỗi cart item
           product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
           quantity: { type: Number, default: 1 },
           unitPrice: { type: Number, default: 0 },
         },
       ],
-      default: [], // Mặc định giỏ hàng là mảng rỗng
+      default: [],
     },
   },
   { timestamps: true }

@@ -13,6 +13,7 @@ const routes = {
     order: '/order',
     address: '/address',
     category: '/category/:categoryId',
+    register: '/register',
 };
 
 export default routes;
