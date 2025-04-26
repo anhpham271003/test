@@ -14,6 +14,8 @@ const routes = {
     address: '/address',
     category: '/category/:categoryId',
     register: '/register',
+    new : '/new',
+    addnew : '/addNew'
 };
 
 export default routes;
