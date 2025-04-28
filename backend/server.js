@@ -14,7 +14,7 @@ const RouterOrigin = require("./routes/routerOrigin");
 const RouterUnit = require("./routes/routerUnit");
 const routerAuth = require("./routes/routerAuth");
 const RouterNew =  require("./routes/routerNew");
-
+const RouterSale =  require("./routes/routerSale");
 
 
 dotenv.config();
@@ -38,6 +38,7 @@ app.use("/api/origins", RouterOrigin);
 app.use("/api/units", RouterUnit);
 app.use("/api/auth", routerAuth);
 app.use("/api/news", RouterNew);
+app.use("/api/sales", RouterSale);
 
 
 app.use("/public", express.static(path.join(__dirname, "public")));

@@ -14,8 +14,11 @@ const routes = {
     address: '/address',
     category: '/category/:categoryId',
     register: '/register',
-    new : '/new',
-    addnew : '/addNew'
+    news : '/news',
+    addNew : '/addNew',
+    updateNew : '/updateNew/:bannerId',
+    sales : '/sales',
+    addSale: '/addSale'
 };
 
 export default routes;
