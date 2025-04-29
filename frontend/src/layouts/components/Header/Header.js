@@ -1,3 +1,4 @@
+
 import classNames from 'classnames/bind';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -17,6 +18,7 @@ import {
 import { Link } from 'react-router-dom';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
+
 import { jwtDecode } from 'jwt-decode';
 import config from '~/config';
 import Button from '~/components/Button';
@@ -29,7 +31,12 @@ import Search from '../Search';
 import * as categoryService from '~/services/categoryService';
 import { useEffect, useState } from 'react';
 
-
+// cart
+import Drawer from '@mui/material/Drawer';
+import { IoCloseSharp } from "react-icons/io5";
+import { RiDeleteBin5Fill } from "react-icons/ri";
+import * as cartService from '~/services/cartService';
+//cart
 const cx = classNames.bind(styles);
 
 function Header() {
@@ -37,7 +44,13 @@ function Header() {
     const [error, setError] = useState('');
     const [categoryMap, setCategoryMap] = useState({});
 
+    //cart
+    const [cartItems, setCartItems] = useState([]);  
+    const [openCartPanel, setOpenCartPanel] = useState(false);
+    //cart
+
     useEffect(() => {
+        
         const fetchCategories = async () => {
             try {
                 const categoryData = await categoryService.getCategories();
@@ -72,8 +85,8 @@ function Header() {
     };
 
     const { userId, avatar } = getToken() || {};
-    console.log('userId:', userId);
-    console.log('avatarUser:', avatar);
+    // console.log('userId:', userId);
+    // console.log('avatarUser:', avatar);
 
     const currentUser = !!userId;
     const handleLogout = () => {
@@ -81,6 +94,83 @@ function Header() {
         sessionStorage.removeItem('token');
         window.location.reload();
     };
+
+    //cart
+    
+    const fetchCart = async () => {
+        if (!userId) return;
+        try {
+            const data = await cartService.getCart();
+            console.log("Dữ liệu cart từ server:", data);
+            setCartItems(data.cart);
+        } catch (error) {
+            console.error('Lỗi lấy cart:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (currentUser) {
+            fetchCart();
+        }
+    }, [currentUser]);
+
+    const handleToggleSelect = (id) => {
+        setCartItems((prevItems) =>
+            prevItems.map((item) =>
+                item.id === id ? { ...item, selected: !item.selected } : item
+            )
+        );
+    };
+
+    const handleDeleteItem = (id) => {
+        setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    };
+
+    const handleQuantityChange = (id, value) => {
+        setCartItems((prevItems) =>
+            prevItems.map((item) =>
+                item.id === id
+                    ? { ...item, quantity: Math.max(1, Number(value)) }
+                    : item
+            )
+        );
+    };
+
+    const handleIncrease = (id) => {
+        setCartItems((prevItems) =>
+            prevItems.map((item) =>
+                item.id === id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+            )
+        );
+    };
+
+    const handleDecrease = (id) => {
+        setCartItems((prevItems) =>
+            prevItems.map((item) =>
+                item.id === id
+                    ? { ...item, quantity: Math.max(1, item.quantity - 1) }
+                    : item
+            )
+        );
+    };
+
+    const calculateTotal = () => {
+        return cartItems.reduce(
+            (total, item) =>
+                item.selected ? total + item.price * item.quantity : total,
+            0
+        );
+    };
+
+    const handleCheckout = () => {
+        const selectedItems = cartItems.filter(item => item.selected);
+        setOpenCartPanel(false);
+        // navigate('/checkout', { state: { cartItems: selectedItems } });
+    };
+    //cart
+
     const MENU_ITEMS = [
         {
             icon: <FontAwesomeIcon icon={faLaptop} />,
@@ -147,7 +237,6 @@ function Header() {
         },
         {
             icon: <FontAwesomeIcon icon={faSignOutAlt} />, // thêm icon logout
-            icon: <FontAwesomeIcon icon={faSignOutAlt} />,
             title: 'Đăng xuất',
             separate: true,
             onClick: handleLogout,
@@ -197,15 +286,88 @@ function Header() {
                             )}
                         </Menu>
                         <Tippy delay={[0, 50]} content="Giỏ hàng" placement="bottom">
-                            <button className={cx('action-btn')}>
+                            <button className={cx('action-btn')} onClick ={() => setOpenCartPanel(true)}>
                                 <CartIcons />
                             </button>
                         </Tippy>
                     </div>
                 </div>
             )}
+            
+            {/* Cart Panel */}
+            <Drawer open={openCartPanel} onClose={() => setOpenCartPanel(false)} anchor="right">
+                <div className={cx('cartDrawer')}>
+                    <div className={cx('cartHeader')}>
+                        <h1 className={cx('cartTitle')}>Giỏ hàng</h1>
+                        <IoCloseSharp
+                            className={cx('cartClose')}
+                            onClick={() => setOpenCartPanel(false)}
+                        />
+                    </div>
+                    <div className={cx('cartItems')}>
+                    {cartItems.map((item) => (
+                            <div key={item._id} className={cx('cartItem')}>
+                                <input
+                                    type="checkbox"
+                                    checked={item.selected}
+                                    onChange={() => handleToggleSelect(item._id)}
+                                    className={cx('cartItemCheckbox')}
+                                />
+                                <img
+                                    src="https://via.placeholder.com/50"
+                                    alt={item.name}
+                                    className={cx('cartItemImage')}
+                                />
+                                <div className={cx('cartItemInfo')}>
+                                    <span className={cx('cartItemName')}>{item.name}</span>
+                                    <div className={cx('cartItemDetails')}>
+                                        <div className={cx('quantityControl')}>
+                                            <button onClick={() => handleDecrease(item._id)}>-</button>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => handleQuantityChange(item._id, e.target.value)}
+                                                className={cx('quantityInput')}
+                                            />
+                                            <button onClick={() => handleIncrease(item._id)}>+</button>
+                                        </div>
+                                        <span>Đơn giá: {item.price.toLocaleString()} VND</span>
+                                    </div>
+                                </div>
+                                <RiDeleteBin5Fill
+                                    className={cx('cartItemDelete')}
+                                    onClick={() => handleDeleteItem(item._id)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <div className={cx('cartFooter')}>
+                        <div className={cx('cartTotal')}>
+                            <span className={cx('totalLabel')}>Tạm tính: </span>
+                            <span className={cx('totalValue')}>
+                                {calculateTotal().toLocaleString()} VND
+                            </span>
+                        </div>
+                        <Link to ="/cartDetail" className="checkout-btn">  
+                                <Button className={cx('checkout-btn')} primary onClick={handleCheckout}>
+                                    Xem chi tiết
+                                </Button>
+                        </Link>
+                        <Link to ="/checkout" className="checkout-btn">  
+                                <Button className={cx('checkout-btn')} primary onClick={handleCheckout}>
+                                    Thanh toán
+                                </Button>
+                        </Link>
+                        
+                    </div>
+                </div>
+            </Drawer>
+
         </header>
     );
 }
 
 export default Header;
+
+

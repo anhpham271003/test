@@ -92,7 +92,7 @@ function AddProduct() {
         if (name === 'productImgs') {
             setProduct((prevProduct) => ({
                 ...prevProduct,
-                productImgs: [...prevProduct.productImgs, ...Array.from(files)],
+                productImgs: Array.from(files),
             }));
         } else if (name === 'productUnitPrice' || name === 'productSupPrice') {
             const numericValue = parseCurrency(value);

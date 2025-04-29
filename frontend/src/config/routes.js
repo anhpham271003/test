@@ -6,7 +6,7 @@ const routes = {
     productDetail: '/product/:productId',
     updateProduct: '/updateProduct/:productId',
     addProduct: '/addProduct',
-    cart: '/cart',
+    carts: '/carts',
     checkout: '/checkout',
     admin: '/admin',
     login: '/login',
@@ -21,6 +21,7 @@ const routes = {
     sales : '/sales',
     addSale: '/addSale',
     updateSale: '/updateSale/:saleId',
+    checkout: '/checkout',
 };
 
 export default routes;
