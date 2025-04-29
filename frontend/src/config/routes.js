@@ -7,6 +7,7 @@ const routes = {
     updateProduct: '/updateProduct/:productId',
     addProduct: '/addProduct',
     carts: '/carts',
+    cartsId: '/carts/:id',
     checkout: '/checkout',
     admin: '/admin',
     login: '/login',

@@ -47,6 +47,8 @@ function Header() {
     //cart
     const [cartItems, setCartItems] = useState([]);  
     const [openCartPanel, setOpenCartPanel] = useState(false);
+    const [totalQuantity, setTotalQuantity] = useState(0);
+    const [totalPrice, setTotalPrice] = useState(0);
     //cart
 
     useEffect(() => {
@@ -65,6 +67,7 @@ function Header() {
                 setLoading(true);
             }
         };
+
         fetchCategories();
     }, []);
 
@@ -95,6 +98,7 @@ function Header() {
         window.location.reload();
     };
 
+    
     //cart
     
     const fetchCart = async () => {
@@ -102,7 +106,10 @@ function Header() {
         try {
             const data = await cartService.getCart();
             console.log("Dữ liệu cart từ server:", data);
+
             setCartItems(data.cart);
+            setTotalQuantity(data.totalQuantity || 0);
+            setTotalPrice(data.totalPrice || 0);
         } catch (error) {
             console.error('Lỗi lấy cart:', error);
         }
@@ -117,7 +124,7 @@ function Header() {
     const handleToggleSelect = (id) => {
         setCartItems((prevItems) =>
             prevItems.map((item) =>
-                item.id === id ? { ...item, selected: !item.selected } : item
+                item._id === id ? { ...item, selected: !item.selected } : item
             )
         );
     };
@@ -158,10 +165,11 @@ function Header() {
 
     const calculateTotal = () => {
         return cartItems.reduce(
-            (total, item) =>
-                item.selected ? total + item.price * item.quantity : total,
-            0
-        );
+            (total, item) => {
+                const price = Number(item.unitPrice);
+                const qty = Number(item.quantity);
+                return item.selected ? total + price * qty : total;
+            }, 0);
     };
 
     const handleCheckout = () => {
@@ -314,7 +322,7 @@ function Header() {
                                     className={cx('cartItemCheckbox')}
                                 />
                                 <img
-                                    src="https://via.placeholder.com/50"
+                                    src={item.image}
                                     alt={item.name}
                                     className={cx('cartItemImage')}
                                 />
@@ -332,7 +340,7 @@ function Header() {
                                             />
                                             <button onClick={() => handleIncrease(item._id)}>+</button>
                                         </div>
-                                        <span>Đơn giá: {item.price.toLocaleString()} VND</span>
+                                        <span>Đơn giá: {totalPrice.toLocaleString()} VND</span>
                                     </div>
                                 </div>
                                 <RiDeleteBin5Fill

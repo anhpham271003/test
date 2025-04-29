@@ -2,7 +2,7 @@ import * as httpRequest from '~/utils/httpRequest';
 
 export const getCart= async () => {
     try {
-        return await httpRequest.get('/carts');
+        return await httpRequest.get("/carts");
     } catch (err) {
         console.log(err);
         throw err;

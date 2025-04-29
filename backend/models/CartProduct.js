@@ -18,4 +18,4 @@ const cartProductSchema = new mongoose.Schema({
    }
 );
 
-module.exports = mongoose.model('cartProduct', cartProductSchema);
+module.exports = mongoose.model('Cartproduct', cartProductSchema);
