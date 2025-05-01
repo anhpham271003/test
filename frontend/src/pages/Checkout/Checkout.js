@@ -1,20 +1,27 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import classNames from 'classnames/bind';
 import Button from '~/components/Button';
 import styles from './Checkout.module.scss';
+import * as vnpayService from '~/services/vnpayService';
+import * as paymentMethodService from '~/services/paymentMethodService';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const cx = classNames.bind(styles);
 
 function Checkout() {
     const location = useLocation();
+    const navigate = useNavigate();
+
     const [cartItems, setCartItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [shippingMethod, setShippingMethod] = useState('standard');
     const [shippingFee, setShippingFee] = useState(20000);
     const [finalTotal, setFinalTotal] = useState(0);
     const [selectedAddress, setSelectedAddress] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('cod');
+
+    const [paymentMethod, setPaymentMethod] = useState([]);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
 
     const addresses = [
         '123 Đường A, Quận 1, TP.HCM',
@@ -24,15 +31,34 @@ function Checkout() {
 
     useEffect(() => {
         if (location.state?.cartItems) {
+            // console.log(location.state.cartItems)
             setCartItems(location.state.cartItems);
             const tempTotal = location.state.cartItems.reduce(
-                (sum, item) => sum + item.price * item.quantity,
+                (sum, item) => sum + item.unitPrice * item.quantity,
                 0
             );
             setTotal(tempTotal);
             setFinalTotal(tempTotal + shippingFee);
         }
+
     }, [location.state]);
+
+    useEffect(() => {
+         
+        const fetchMethod= async () => {
+            try {
+              const response = await paymentMethodService.getPaymentMethod(); 
+              console.log(response)
+              setPaymentMethod(response);
+            } catch (error) {
+              console.error('Lỗi lấy danh sách phương thức thanh toán', error);
+            }
+        }
+
+        fetchMethod();
+
+        }, []);
+
 
     useEffect(() => {
         let fee = 0;
@@ -51,10 +77,10 @@ function Checkout() {
     };
 
     const handlePaymentChange = (e) => {
-        setPaymentMethod(e.target.value);
+         setSelectedPaymentMethod(e.target.value);
     };
 
-    const handlePlaceOrder = () => {
+    const handlePlaceOrder = async () => {
         if (!selectedAddress) {
             alert('Vui lòng chọn địa chỉ giao hàng!');
             return;
@@ -66,11 +92,33 @@ function Checkout() {
             shippingFee,
             finalTotal,
             address: selectedAddress,
-            paymentMethod,
+            selectedPaymentMethod,
         };
 
-        console.log('Đặt hàng:', orderDetails);
-        alert('Đặt hàng thành công!');
+        if (selectedPaymentMethod === 'vnpay') {
+            try {
+              const res = await vnpayService.createPaymentUrl({
+                amount: finalTotal,
+                items: cartItems,
+                userId: 'demo-user-id',
+              });
+              console.log('du lieu trả về' , res)
+      
+              if (res?.redirectUrl) {
+                window.location.href = res.redirectUrl;
+              } else {
+                alert('Không tạo được liên kết thanh toán.');
+              }
+            } catch (err) {
+              console.error('Lỗi khi gọi VNPAY:', err);
+              alert('Thanh toán thất bại.');
+            }
+          } else {
+            console.log('Đặt hàng:', orderDetails);
+            alert('Đặt hàng thành công!');
+            // navigate('/order-success');
+          }
+        
     };
 
     return (
@@ -80,9 +128,9 @@ function Checkout() {
                     <h2>Đơn hàng của bạn</h2>
                     {cartItems.length > 0 ? (
                         cartItems.map((item) => (
-                            <div key={item.id} className={cx('checkoutItem')}>
+                            <div key={item._id} className={cx('checkoutItem')}>
                                 <img
-                                    src="https://via.placeholder.com/80"
+                                    src={item.image}
                                     alt={item.name}
                                     className={cx('checkoutItemImage')}
                                 />
@@ -92,7 +140,7 @@ function Checkout() {
                                         Số lượng: {item.quantity}
                                     </span>
                                     <span className={cx('checkoutItemPrice')}>
-                                        Giá: {(item.price * item.quantity).toLocaleString()} VND
+                                        Giá: {(item.unitPrice * item.quantity).toLocaleString()} VND
                                     </span>
                                 </div>
                             </div>
@@ -133,9 +181,12 @@ function Checkout() {
 
                         <div className={cx('summarySection')}>
                             <span>Chọn phương thức thanh toán:</span>
-                            <select value={paymentMethod} onChange={handlePaymentChange}>
-                                <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                                <option value="bank">Chuyển khoản ngân hàng</option>
+                            <select value={selectedPaymentMethod} onChange={handlePaymentChange}>
+                               {paymentMethod.map((method) => (
+                                    <option key={method._id} value={method.paymentType}>
+                                    {method.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -148,10 +199,49 @@ function Checkout() {
                             <span>Thành tiền:</span>
                             <span>{finalTotal.toLocaleString()} VND</span>
                         </div>
-
+                        { selectedPaymentMethod === 'paypal'  && selectedAddress ?(
+                            <PayPalScriptProvider options={{ 
+                                "client-id": "AThBE0jR9LSLCjsKasYBzogC8WEYyqba-Nkv0esjVjtt9lEPTi-lGfQwdnFol6uaD14djldcjtkDVLi-",
+                                 currency: "USD",
+                                 intent: "capture",
+                                 components: "buttons",
+                                 "enable-funding": "paypal",
+                                 "data-sdk-integration-source": "button-factory"
+                                 }}>
+                               <PayPalButtons
+                                style={{ layout: "vertical" }}
+                                createOrder={(data, actions) => {
+                                    return actions.order.create({
+                                    purchase_units: [
+                                        {
+                                        amount: {
+                                            // value: finalTotal.toString(), // tổng tiền đơn hàng
+                                            value: "0.01"
+                                        },
+                                        },
+                                    ],
+                                    });
+                                }}
+                                onApprove={(data, actions) => {
+                                    return actions.order.capture().then((details) => {
+                                    alert("Thanh toán thành công bởi " + details.payer.name.given_name);
+                                    console.log(details, data);
+                                    // Gọi server lưu đơn hàng nếu muốn
+                                    // navigate("/payment-success");
+                                    });
+                                }}
+                                onError={(err) => {
+                                    console.error("❌ Lỗi khi thanh toán PayPal:", err);
+                                    alert("Đã xảy ra lỗi trong quá trình thanh toán. Vui lòng thử lại.");
+                                  }}
+                                />
+                            </PayPalScriptProvider>
+                        ):(
                         <Button primary onClick={handlePlaceOrder}>
                             Đặt hàng
                         </Button>
+                        )
+                        }
                     </div>
                 </div>
             </div>

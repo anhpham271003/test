@@ -782,22 +782,25 @@ export default Header;
 // });
 
 
-
-
-    // const cartItems = await CartProduct.find({ user: req.params.userId })
-  //     .populate('product', 'productName productImgs productUnitPrice productSupPrice')
-  //     .lean();
-    // const cart = cartItems.map(item => ({
-    //   _id: item._id,
-    //   product: item.product._id,
-    //   name: item.product.productName,
-    //   image: item.product.productImgs?.[0]?.link || '',
-    //   quantity: item.quantity,
-    //   unitPrice: item.product.productUnitPrice,
-    //   selected: true,
-    // }));
-
-    // const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-    // const totalPrice = cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-
-    // res.json({ cart, totalQuantity, totalPrice });
+    // if (paymentMethod === 'vnpay') {
+    //     try {
+    //       const res = await vnpayService.createPaymentUrl({
+    //         amount: finalTotal,
+    //         items: cartItems,
+    //         userId: 'demo-user-id',
+    //       });
+  
+    //       if (res?.redirectUrl) {
+    //         window.location.href = res.redirectUrl;
+    //       } else {
+    //         alert('Không tạo được liên kết thanh toán.');
+    //       }
+    //     } catch (err) {
+    //       console.error('Lỗi khi gọi VNPAY:', err);
+    //       alert('Thanh toán thất bại.');
+    //     }
+    //   } else {
+    //     console.log('Đặt hàng:', orderDetails);
+    //     alert('Đặt hàng thành công!');
+    //     navigate('/order-success');
+    //   }

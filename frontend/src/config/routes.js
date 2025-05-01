@@ -6,8 +6,8 @@ const routes = {
     productDetail: '/product/:productId',
     updateProduct: '/updateProduct/:productId',
     addProduct: '/addProduct',
-    carts: '/carts',
-    cartsId: '/carts/:id',
+    // carts: '/carts',
+    carts: '/carts/:id',
     checkout: '/checkout',
     admin: '/admin',
     login: '/login',
@@ -22,7 +22,9 @@ const routes = {
     sales : '/sales',
     addSale: '/addSale',
     updateSale: '/updateSale/:saleId',
-    checkout: '/checkout',
+    vnpay : '/vnpay/',
+    // method : '/payment-method',
+
 };
 
 export default routes;

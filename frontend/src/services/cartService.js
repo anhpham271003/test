@@ -1,17 +1,17 @@
 import * as httpRequest from '~/utils/httpRequest';
 
-export const getCart= async () => {
+export const getCart= async (id) => {
     try {
-        return await httpRequest.get("/carts");
+        return await httpRequest.get(`/carts/${id}`);
     } catch (err) {
         console.log(err);
         throw err;
     }
 };
 
-export const addCart = async (carts) => {
+export const addCart = async ({ userId, productId, quantity }) => {
     try {
-        return await httpRequest.post('/carts', carts, );
+        return await httpRequest.post('/carts', { userId, productId, quantity } );
     } catch (err) {
         console.log(err);
         throw err;
