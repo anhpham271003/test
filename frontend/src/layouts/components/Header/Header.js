@@ -16,7 +16,7 @@ import {
     faStar,
     faCartPlus,
 } from '@fortawesome/free-solid-svg-icons';
-import { Link, useNavigate  } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -38,6 +38,7 @@ import { IoCloseSharp } from "react-icons/io5";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import * as cartService from '~/services/cartService';
 import Swal from 'sweetalert2';
+
 //cart
 const cx = classNames.bind(styles);
 

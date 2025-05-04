@@ -1,10 +1,17 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import classNames from 'classnames/bind';
+import { jwtDecode } from 'jwt-decode';
+
 import Button from '~/components/Button';
 import styles from './Checkout.module.scss';
+import { toast, ToastContainer  } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import * as vnpayService from '~/services/vnpayService';
 import * as paymentMethodService from '~/services/paymentMethodService';
+import * as checkoutService from '~/services/checkoutService';
+
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const cx = classNames.bind(styles);
@@ -22,6 +29,25 @@ function Checkout() {
 
     const [paymentMethod, setPaymentMethod] = useState([]);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+
+    const getToken = () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) return null;
+            try {
+                const decoded = jwtDecode(token);
+                return {
+                    userId: decoded.userId,
+                    userRole: decoded.userRole,
+                    avatar: decoded.userAvatar || null,
+                };
+            } catch (error) {
+                 console.error('Token decode error:', error);
+                return null;
+            }
+        };
+        
+        const { userId, avatar } = getToken() || {};
+
 
     const addresses = [
         '123 Đường A, Quận 1, TP.HCM',
@@ -97,11 +123,29 @@ function Checkout() {
 
         if (selectedPaymentMethod === 'vnpay') {
             try {
-              const res = await vnpayService.createPaymentUrl({
-                amount: finalTotal,
-                items: cartItems,
-                userId: 'demo-user-id',
-              });
+
+              const res = await vnpayService.createPaymentUrl(
+                
+                // amount: finalTotal,
+                // items: cartItems,
+                // userId: 'demo-user-id',
+              {
+                    userId: 'demo-user-id',
+                    orderItems: cartItems.map(item => ({
+                        productId: item._id,
+                        name: item.name,
+                        quantity: item.quantity,
+                        price: item.unitPrice
+                    })),
+                    shippingAddress: selectedAddress,
+                    paymentMethod: selectedPaymentMethod,
+                    shippingPrice: shippingFee,
+                    totalPrice: finalTotal,
+                    isPaid: true,
+                    paidAt: new Date(),
+                    orderStatus: "processing"
+                }
+            );
               console.log('du lieu trả về' , res)
       
               if (res?.redirectUrl) {
@@ -113,16 +157,48 @@ function Checkout() {
               console.error('Lỗi khi gọi VNPAY:', err);
               alert('Thanh toán thất bại.');
             }
-          } else {
-            console.log('Đặt hàng:', orderDetails);
-            alert('Đặt hàng thành công!');
-            // navigate('/order-success');
-          }
-        
+          } 
+
+        //   if (selectedPaymentMethod === 'paypal') {
+        //     try {
+        //       const res = await checkoutService.createOrder({
+        //             userId: 'demo-user-id',
+        //             orderItems: cartItems.map(item => ({
+        //                 productId: item._id,
+        //                 name: item.name,
+        //                 quantity: item.quantity,
+        //                 price: item.unitPrice
+        //             })),
+        //             shippingAddress: selectedAddress,
+        //             paymentMethod: selectedPaymentMethod,
+        //             shippingPrice: shippingFee,
+        //             totalPrice: finalTotal,
+        //             isPaid: true,
+        //             paidAt: new Date(),
+        //             orderStatus: "processing"
+        //         }
+        //     );
+            
+        //       console.log('du lieu trả về' , res)
+        //     //   alert("Đặt hàng thành công!");
+        //     // 
+        //     } catch (err) {
+        //       console.error('Lỗi khi gọi PAYPAl:', err);
+        //       alert('Thanh toán thất bại.');
+        //     }
+        //   }
     };
 
     return (
         <div className={cx('checkoutWrapper')}>
+             <ToastContainer 
+                    position="top-center"  //  Đặt ở góc dưới bên trái
+                    autoClose={3000}         // Tự động tắt sau 3 giây (có thể chỉnh)
+                    hideProgressBar={true}  //  thanh tiến trình
+                    newestOnTop={false}    //Toast mới sẽ hiện dưới các toast cũ.
+                    closeOnClick            //Cho phép đóng toast
+                    draggable
+                />
             <div className={cx('checkoutContainer')}>
                 <div className={cx('checkoutLeft')}>
                     <h2>Đơn hàng của bạn</h2>
@@ -216,19 +292,52 @@ function Checkout() {
                                         {
                                         amount: {
                                             // value: finalTotal.toString(), // tổng tiền đơn hàng
-                                            value: "0.01"
+                                            value: "1"
                                         },
                                         },
                                     ],
                                     });
                                 }}
                                 onApprove={(data, actions) => {
-                                    return actions.order.capture().then((details) => {
-                                    alert("Thanh toán thành công bởi " + details.payer.name.given_name);
-                                    console.log(details, data);
-                                    // Gọi server lưu đơn hàng nếu muốn
-                                    // navigate("/payment-success");
-                                    });
+                                    return actions.order.capture()
+                                        .then(async (details) => {
+                                            window.close();
+                                            console.log(details, data);
+                                            const res = await checkoutService.createOrder({
+                                                // userId: 'demo-user-id',
+                                                // items: cartItems,
+                                                // address: selectedAddress,
+                                                // shippingMethod,
+                                                // shippingFee,
+                                                // finalTotal,
+                                                // selectedPaymentMethod,
+                                                userId: userId,
+                                                orderItems: cartItems.map(item => ({
+                                                    cartId: item._id,
+                                                    productId : item.product,
+                                                    name: item.name,
+                                                    quantity: item.quantity,
+                                                    price: item.unitPrice,
+                                                    productImage: item.image,
+                                                })),
+                                                shippingAddress: selectedAddress,
+                                                paymentMethod: selectedPaymentMethod,
+                                                shippingPrice: shippingFee,
+                                                totalPrice: finalTotal,
+                                                isPaid: true,
+                                                paidAt: new Date(),
+                                                orderStatus: "pending"
+                                            });
+                                            console.log('du lieu trả về' , res)
+                                            console.log(data, actions)
+                                            // Gọi server lưu đơn hàng nếu muốn
+                                            window.dispatchEvent(new Event("cart-updated"));
+                                            navigate("/" , {
+                                                state: {
+                                                  toastMessage: "Thanh toán thành công bởi " + details.payer.name.given_name
+                                                }
+                                              });
+                                        });
                                 }}
                                 onError={(err) => {
                                     console.error("❌ Lỗi khi thanh toán PayPal:", err);

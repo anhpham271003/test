@@ -24,6 +24,7 @@ const routes = {
     updateSale: '/updateSale/:saleId',
     vnpay : '/vnpay/',
     // method : '/payment-method',
+    deletemany : '/delete-many',
 
 };
 
