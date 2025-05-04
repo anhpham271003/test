@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as productServices from '~/services/productService';
+import * as cartService from '~/services/cartService';
+import { jwtDecode } from 'jwt-decode';
+
 import classNames from 'classnames/bind';
 import styles from './ProductDetail.module.scss';
 import config from '~/config';
 import Image from '~/components/Image';
+import Swal from 'sweetalert2'; // thư viện hiện alert 
 const cx = classNames.bind(styles);
 function ProductDetail() {
+
     const { productId } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isLiked, setIsLiked] = useState(false);
     const navigate = useNavigate();
+
     useEffect(() => {
         const fetchProductDetails = async () => {
             setLoading(true);
@@ -26,8 +32,59 @@ function ProductDetail() {
         fetchProductDetails();
     }, [productId]);
 
-    const handleAddToCart = () => {
-        alert('Sản phẩm đã được thêm vào giỏ hàng!');
+
+    const getToken = () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) return null;
+            try {
+                const decoded = jwtDecode(token);
+                return {
+                    userId: decoded.userId,
+                    userRole: decoded.userRole,
+                    avatar: decoded.userAvatar || null,
+                };
+            } catch (error) {
+                console.error('Token decode error:', error);
+                return null;
+            }
+        };
+    //lấy userId của tài khoản
+    const { userId, avatar } = getToken() || {};
+
+        //hàm xử lý thêm sản phẩm vào giỏ
+    const handleAddToCart = async (id) => {
+
+        try {
+            // Kiểm tra đăng nhập
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Bạn chưa đăng nhập',
+                text: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng',
+                confirmButtonText: 'Đăng nhập',
+            }).then(() => {
+                navigate('/login'); // chuyển sang trang đăng nhập
+            });
+            return;
+            }
+            // thêm sản phẩm vào giỏ
+            await cartService.addCart({
+              userId,
+              productId,
+              quantity: 1, // hoặc số lượng người dùng chọn
+            });
+        
+              //  Bắn sự kiện giỏ hàng cập nhật
+            window.dispatchEvent(new CustomEvent('cart-updated'));
+
+            Swal.fire('Thành công', 'Sản phẩm đã được thêm vào giỏ hàng', 'success')
+                // .then(() => {
+                //     navigate('/');
+                // });
+          } catch (err) {
+            Swal.fire('Lỗi', 'Không thể thêm vào giỏ hàng', 'error');
+          }
     };
 
     const handleLike = () => {
@@ -106,7 +163,7 @@ function ProductDetail() {
                         </p>
                     </div>
                     <div className={cx('product-actions')}>
-                        <button onClick={handleAddToCart}>Thêm vào giỏ hàng</button>
+                        <button onClick={() => handleAddToCart(product._id)}>Thêm vào giỏ hàng</button>
                         <button onClick={handleLike} style={{ backgroundColor: isLiked ? 'red' : 'gray' }}>
                             {isLiked ? 'Bỏ thích' : 'Thích'}
                         </button>

@@ -16,6 +16,10 @@ const routerAuth = require("./routes/routerAuth");
 const RouterNew =  require("./routes/routerNew");
 const verifyToken = require("./middlewares/Auth/verifyToken");
 const RouterSale =  require("./routes/routerSale");
+const vnpayRouter = require('./routes/routerVnpay');
+const paymentMethodRouter = require('./routes/routerPaymentMethod');
+const checkoutRouter = require('./routes/routerCheckout');
+const orderRouter = require('./routes/routerOrder');
 
 dotenv.config();
 const app = express();
@@ -39,9 +43,15 @@ app.use("/api/units", RouterUnit);
 app.use("/api/auth", routerAuth);
 app.use("/api/news", RouterNew);
 app.use("/api/sales", RouterSale);
-
+app.use('/api/vnpay', vnpayRouter);
+app.use('/api/', paymentMethodRouter);
+app.use('/api/checkout', checkoutRouter);
+app.use('/api/order', orderRouter);
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 // Server Running
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+//AThBE0jR9LSLCjsKasYBzogC8WEYyqba-Nkv0esjVjtt9lEPTi-lGfQwdnFol6uaD14djldcjtkDVLi-

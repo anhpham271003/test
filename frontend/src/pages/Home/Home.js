@@ -2,13 +2,18 @@ import { useEffect, useState } from 'react';
 import * as productService from '~/services/productService';
 import classNames from 'classnames/bind';
 import styles from './Home.module.scss';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import config from '~/config';
 import Image from '~/components/Image';
 import Banner from '~/layouts/components/BannerImage';
+import { toast } from "react-toastify";
+
 const cx = classNames.bind(styles);
 
 function Home() {
+
+    const location = useLocation();
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -32,6 +37,16 @@ function Home() {
         };
         fetchProducts();
     }, [page, limit]);
+
+
+    useEffect(() => {
+            if (location.state?.toastMessage) {
+              toast.success(location.state.toastMessage);
+              // Xóa state để toast không hiển thị lại nếu refresh
+              window.history.replaceState({}, document.title);
+            }
+          }, [location]);
+    
 
     return (
         <div className={cx('wrapper')}>

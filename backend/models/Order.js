@@ -1,3 +1,23 @@
+// // models/Order.js
+// const mongoose = require('mongoose');
+
+// const OrderSchema = new mongoose.Schema({
+//   // userId: { type: String, required: true },
+//   items: [
+//     {
+//       product: String, // hoặc ObjectId nếu bạn dùng ref
+//       name: String,
+//       quantity: Number,
+//       unitPrice: Number,
+//     },
+//   ],
+//   amount: Number,
+//   status: { type: String, default: 'pending' }, // 'pending', 'paid'
+//   createdAt: { type: Date, default: Date.now },
+// });
+
+// module.exports = mongoose.model('Order', OrderSchema);
+
 const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema(
@@ -29,8 +49,8 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["COD", "Credit Card", "PayPal"],
-      default: "COD",
+      enum: ["cod", "vnpay", "paypal"],
+      default: "cod",
     },
     paymentStatus: {
       type: String,
@@ -38,11 +58,11 @@ const OrderSchema = new mongoose.Schema(
       default: "pending",
     },
     shippingAddress: {
-      fullName: { type: String, required: true },
-      phoneNumber: { type: String, required: true },
-      address: { type: String, required: true },
-      city: { type: String, required: true },
-      country: { type: String, required: true },
+      fullAddress: { type: String, required: true },
+      // phoneNumber: { type: String, required: true },
+      // address: { type: String, required: true },
+      // city: { type: String, required: true },
+      // country: { type: String, required: true },
     },
   },
   { timestamps: true }

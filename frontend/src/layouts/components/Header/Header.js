@@ -14,8 +14,9 @@ import {
     faImage,
     faMobilePhone,
     faStar,
+    faCartPlus,
 } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 
@@ -36,20 +37,42 @@ import Drawer from '@mui/material/Drawer';
 import { IoCloseSharp } from "react-icons/io5";
 import { RiDeleteBin5Fill } from "react-icons/ri";
 import * as cartService from '~/services/cartService';
+import Swal from 'sweetalert2';
+
 //cart
 const cx = classNames.bind(styles);
 
 function Header() {
+
+    const navigate = useNavigate();
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [categoryMap, setCategoryMap] = useState({});
 
     //cart
-    const [cartItems, setCartItems] = useState([]);  
-    const [openCartPanel, setOpenCartPanel] = useState(false);
-    const [totalQuantity, setTotalQuantity] = useState(0);
-    const [totalPrice, setTotalPrice] = useState(0);
+    const [cartItems, setCartItems] = useState([]);    // giỏ hàng
+    const [openCartPanel, setOpenCartPanel] = useState(false); // trạng thái tắt, mở giỏ hànghàng
     //cart
+
+    const getToken = () => {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) return null;
+        try {
+            const decoded = jwtDecode(token);
+            return {
+                userId: decoded.userId,
+                userRole: decoded.userRole,
+                avatar: decoded.userAvatar || null,
+            };
+        } catch (error) {
+            console.error('Token decode error:', error);
+            return null;
+        }
+    };
+
+    const { userId, avatar } = getToken() || {};
+    const currentUser = !!userId;
 
     useEffect(() => {
         
@@ -71,27 +94,20 @@ function Header() {
         fetchCategories();
     }, []);
 
-    const getToken = () => {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (!token) return null;
-        try {
-            const decoded = jwtDecode(token);
-            return {
-                userId: decoded.userId,
-                userRole: decoded.userRole,
-                avatar: decoded.userAvatar || null,
-            };
-        } catch (error) {
-            console.error('Token decode error:', error);
-            return null;
-        }
-    };
+    useEffect(() => {
+        const handleCartUpdateEvent = () => {
+          if (userId) {
+            fetchCart(); // gọi lại giỏ hàng
+          }
+        };
+      
+        window.addEventListener('cart-updated', handleCartUpdateEvent); // sự kiện cập nhật lại giỏ hàng sau thêm
+        return () => {
+          window.removeEventListener('cart-updated', handleCartUpdateEvent);
+        };
+      }, [userId]);
 
-    const { userId, avatar } = getToken() || {};
-    // console.log('userId:', userId);
-    // console.log('avatarUser:', avatar);
-
-    const currentUser = !!userId;
+    
     const handleLogout = () => {
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
@@ -100,16 +116,14 @@ function Header() {
 
     
     //cart
-    
+    // lấy giỏ hàng
     const fetchCart = async () => {
         if (!userId) return;
         try {
-            const data = await cartService.getCart();
-            console.log("Dữ liệu cart từ server:", data);
+            const data = await cartService.getCart(userId);
+            // console.log("Dữ liệu cart từ server:", data);
 
-            setCartItems(data.cart);
-            setTotalQuantity(data.totalQuantity || 0);
-            setTotalPrice(data.totalPrice || 0);
+            setCartItems(data);
         } catch (error) {
             console.error('Lỗi lấy cart:', error);
         }
@@ -121,6 +135,7 @@ function Header() {
         }
     }, [currentUser]);
 
+    //hàm xử lý checkbox giỏ hàng
     const handleToggleSelect = (id) => {
         setCartItems((prevItems) =>
             prevItems.map((item) =>
@@ -129,40 +144,76 @@ function Header() {
         );
     };
 
-    const handleDeleteItem = (id) => {
-        setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-    };
+    //hàm xử lý xóa thùng rác 
+    const handleDeleteItem = async (id) => {
 
+            try {
+                await cartService.deleteCartById(id);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đã xóa sản phẩm khỏi giỏ hàng',
+                    toast: true,
+                    position: 'center',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'swalOnTop'
+                      },
+                  });
+                setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
+                } catch (error) { 
+                    console.error('Xóa thất bại:', error);
+                }
+        }
+
+    // xiwr lý thay đổi số lượng
     const handleQuantityChange = (id, value) => {
         setCartItems((prevItems) =>
             prevItems.map((item) =>
-                item.id === id
+                item._id === id
                     ? { ...item, quantity: Math.max(1, Number(value)) }
                     : item
             )
         );
     };
 
-    const handleIncrease = (id) => {
+    //xử lý nút +
+    const handleIncrease = async (id) => {
+        const item = cartItems.find((item) => item._id === id);
+    if (!item) return;
+
+    const updatedItem = { ...item, quantity: item.quantity + 1 };
+
+    try {
+        await cartService.updateCart(id, { quantity: updatedItem.quantity });
         setCartItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id
-                    ? { ...item, quantity: item.quantity + 1 }
-                    : item
-            )
+            prevItems.map((i) => i._id === id ? updatedItem : i)
         );
+    } catch (err) {
+        console.error('Cập nhật tăng số lượng thất bại:', err);
+    }
+    
     };
 
-    const handleDecrease = (id) => {
-        setCartItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id
-                    ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-                    : item
-            )
-        );
+    //xử lý nút -
+    const handleDecrease = async (id) => {
+        const item = cartItems.find((item) => item._id === id);
+        if (!item || item.quantity <= 1) return;
+
+        const updatedItem = { ...item, quantity: item.quantity - 1 };
+
+        try {
+            await cartService.updateCart(id, { quantity: updatedItem.quantity });
+            setCartItems((prevItems) =>
+                prevItems.map((i) => i._id === id ? updatedItem : i)
+            );
+        } catch (err) {
+            console.error('Cập nhật giảm số lượng thất bại:', err);
+        }
     };
 
+    //xử lý tính tổng tiền tạm tính
     const calculateTotal = () => {
         return cartItems.reduce(
             (total, item) => {
@@ -175,7 +226,7 @@ function Header() {
     const handleCheckout = () => {
         const selectedItems = cartItems.filter(item => item.selected);
         setOpenCartPanel(false);
-        // navigate('/checkout', { state: { cartItems: selectedItems } });
+        navigate('/checkout', { state: { cartItems: selectedItems } });
     };
     //cart
 
@@ -313,42 +364,53 @@ function Header() {
                         />
                     </div>
                     <div className={cx('cartItems')}>
-                    {cartItems.map((item) => (
-                            <div key={item._id} className={cx('cartItem')}>
-                                <input
-                                    type="checkbox"
-                                    checked={item.selected}
-                                    onChange={() => handleToggleSelect(item._id)}
-                                    className={cx('cartItemCheckbox')}
-                                />
-                                <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    className={cx('cartItemImage')}
-                                />
-                                <div className={cx('cartItemInfo')}>
-                                    <span className={cx('cartItemName')}>{item.name}</span>
-                                    <div className={cx('cartItemDetails')}>
-                                        <div className={cx('quantityControl')}>
-                                            <button onClick={() => handleDecrease(item._id)}>-</button>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={item.quantity}
-                                                onChange={(e) => handleQuantityChange(item._id, e.target.value)}
-                                                className={cx('quantityInput')}
-                                            />
-                                            <button onClick={() => handleIncrease(item._id)}>+</button>
-                                        </div>
-                                        <span>Đơn giá: {totalPrice.toLocaleString()} VND</span>
-                                    </div>
-                                </div>
-                                <RiDeleteBin5Fill
-                                    className={cx('cartItemDelete')}
-                                    onClick={() => handleDeleteItem(item._id)}
-                                />
+                    {
+                        (!currentUser || cartItems.length === 0) 
+                        ? (
+                            <div className={cx('emptyCart')}>
+                                <FontAwesomeIcon icon={faCartPlus} className={cx('emptyCartIcon')} />
+                                <p className={cx('emptyCartText')}>
+                                    {!currentUser ? 'Vui lòng đăng nhập để xem giỏ hàng' : 'Giỏ hàng của bạn đang trống'}
+                                </p>
                             </div>
-                        ))}
+                        ) 
+                        : (cartItems.map((item) => (
+                                <div key={item._id} className={cx('cartItem')}>
+                                    <input
+                                        type="checkbox"
+                                        checked={item.selected}
+                                        onChange={() => handleToggleSelect(item._id)}
+                                        className={cx('cartItemCheckbox')}
+                                    />
+                                    <img
+                                        src={item.image}
+                                        alt={item.name}
+                                        className={cx('cartItemImage')}
+                                    />
+                                    <div className={cx('cartItemInfo')}>
+                                        <span className={cx('cartItemName')}>{item.name}</span>
+                                        <div className={cx('cartItemDetails')}>
+                                            <div className={cx('quantityControl')}>
+                                                <button onClick={() => handleDecrease(item._id)}>-</button>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={item.quantity}
+                                                    onChange={(e) => handleQuantityChange(item._id, e.target.value)}
+                                                    className={cx('quantityInput')}
+                                                />
+                                                <button onClick={() => handleIncrease(item._id)}>+</button>
+                                            </div>
+                                            <span>Đơn giá: {(item.unitPrice * item.quantity).toLocaleString()} VND</span>
+                                        </div>
+                                    </div>
+                                    <RiDeleteBin5Fill
+                                        className={cx('cartItemDelete')}
+                                        onClick={() => handleDeleteItem(item._id)}
+                                    />
+                                </div>
+                            )))
+                    }
                     </div>
                     <div className={cx('cartFooter')}>
                         <div className={cx('cartTotal')}>
@@ -357,16 +419,15 @@ function Header() {
                                 {calculateTotal().toLocaleString()} VND
                             </span>
                         </div>
-                        <Link to ="/cartDetail" className="checkout-btn">  
-                                <Button className={cx('checkout-btn')} primary onClick={handleCheckout}>
+                        <Link to ="/cartDetail">  
+                                <Button className={cx('checkout-btn')} primary >
                                     Xem chi tiết
                                 </Button>
                         </Link>
-                        <Link to ="/checkout" className="checkout-btn">  
                                 <Button className={cx('checkout-btn')} primary onClick={handleCheckout}>
                                     Thanh toán
                                 </Button>
-                        </Link>
+                        
                         
                     </div>
                 </div>
